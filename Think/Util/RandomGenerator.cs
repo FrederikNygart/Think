@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Think.Util
 {
-    static class RandomGenerator
+    public class RandomGenerator
     {
         public static double Double(double minimum, double maximum)
         {

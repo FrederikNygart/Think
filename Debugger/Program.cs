@@ -25,49 +25,63 @@ namespace Debugger
 
         static void Main(string[] args)
         {
-            var a = new Matrix(2, 3);
-            var b = new Matrix(3, 2);
+            var nn = new NeuralNetwork(2, 2, 2);
+            var input = new List<double> { 1, 0 };
+            var targets =  new List<double> { 1, 0 };
 
-            a.Random();
-            b.Random();
+            PrintMatrix(nn.Train(input, targets));
 
-            PrintMatrix(a.Data, 3);
-            Console.WriteLine($"-----------------------------------------------------------------");
-
-            //PrintMatrix(b.Matrix, 2);
-            //Console.WriteLine($"-----------------------------------------------------------------");
-
-            PrintMatrix(a.Transpose(),2);
-            Console.WriteLine($"-----------------------------------------------------------------");
+            //foreach (var put in output)
+            //{
+            //    Console.WriteLine(put);
+            //}
 
             Console.ReadKey();
         }
 
 
-        public static void PrintMatrix(int[,] m, int numOfCols)
+        public static void TestMatrix()
         {
-            Counter = 0;
+            var a = new Matrix(2, 3);
+            var b = new Matrix(3, 2);
+
+            a.Random();
+
+            PrintMatrix(a.Data);
+
+            Matrix.Map(a.Data , x => x * 2);
+
+            PrintMatrix(a.Data);
+        }
+
+        public static void PrintMatrix(double[,] m)
+        {
+            var counter = 0;
+            var numOfCols = m.GetLength(1);
             var rowNum = 0;
             int colNum = 0;
-            foreach (var row in m)
+            Console.WriteLine($"");
+            Console.WriteLine($"");
+            Console.WriteLine($"MATRIX");
+            Console.WriteLine($"-----------------------------------------------------------------");
+            foreach (var field in m)
             {
-                colNum = (Counter % numOfCols) + 1;
-                var currentRow = (Counter / numOfCols) + 1;
+                colNum = (counter % numOfCols) + 1;
+                var currentRow = (counter / numOfCols) + 1;
                 if (rowNum < currentRow)
                 {
 
-                    rowNum = (Counter / numOfCols) + 1;
+                    rowNum = (counter / numOfCols) + 1;
                     Console.WriteLine($"");
-                    Console.WriteLine($"Row {rowNum}");
                 }
 
-                Console.Write($"Col {colNum}:  {row}  ");
+                Console.Write($"   {field}   ");
 
-
-                Counter++;
+                counter++;
             }
             Console.WriteLine($"");
-
+            Console.WriteLine($"");
+            Console.WriteLine($"-----------------------------------------------------------------");
         }
 
         public static void TestTraining(Perceptron brain)
