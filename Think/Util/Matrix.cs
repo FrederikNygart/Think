@@ -163,20 +163,24 @@ namespace Think
             return Data;
         }
 
-        public static double[,] Multiply(double[,] matrix, double val)
+        public static double[,] ScalarProduct(double[,] matrix, double val)
         {
-            for (int i = 0; i < matrix.GetLength(0); i++)
-            {
-                for (int j = 0; j < matrix.GetLength(1); j++)
-                {
-                    matrix[i, j] *= val;
-                };
-            };
-
-            return matrix;
+            return Map(matrix, point => point * val);
         }
 
-        public static double[,] Multiply(double[,] matrixA, double[,] matrixB)
+        public static double[,] HadamardProduct(double[,] matrixA, double[,] matrixB)
+        {
+            var aNumRows = matrixA.GetLength(0);
+            var aNumCols = matrixA.GetLength(1);
+            var bNumRows = matrixB.GetLength(0);
+            var bNumCols = matrixB.GetLength(1);
+            if (aNumCols != bNumCols || aNumRows != bNumRows)
+                throw new FormatException("Amount of rows and columns in matrix " +
+                    "a and b must be equal");
+            return Map(matrixA, matrixB, (valA, valB) => valA * valB);
+        }
+
+        public static double[,] MatrixProduct(double[,] matrixA, double[,] matrixB)
         {
             var aNumRows = matrixA.GetLength(0);
             var aNumCols = matrixA.GetLength(1);
@@ -204,7 +208,6 @@ namespace Think
             return result;
         }
 
-
         public static double[,] Map(double[,] matrix, Func<double, double> transformer)
         {
             for (int i = 0; i < matrix.GetLength(0); i++)
@@ -218,6 +221,19 @@ namespace Think
             return matrix;
         }
 
+        public static double[,] Map(double[,] matrixA, double[,] matrixB, Func<double, double, double> transformer)
+        {
+            for (int i = 0; i < matrixA.GetLength(0); i++)
+            {
+                for (int j = 0; j < matrixA.GetLength(1); j++)
+                {
+                    var valA = matrixA[i, j];
+                    var valB = matrixB[i, j];
+                    matrixA[i, j] = transformer(valA, valB);
+                };
+            };
+            return matrixA;
+        }
 
         public double[,] Transpose()
         {
@@ -253,10 +269,41 @@ namespace Think
             {
                 for (var j = 0; j < Cols; j++)
                 {
+
                     Data[i, j] = RandomGenerator.Double(-1, 1);
                 };
             };
             return Data;
+        }
+
+        public static void Print(double [,] m)
+        {
+            var counter = 0;
+            var numOfCols = m.GetLength(1);
+            var rowNum = 0;
+            int colNum = 0;
+            Console.WriteLine($"");
+            Console.WriteLine($"");
+            Console.WriteLine($"MATRIX");
+            Console.WriteLine($"-----------------------------------------------------------------");
+            foreach (var field in m)
+            {
+                colNum = (counter % numOfCols) + 1;
+                var currentRow = (counter / numOfCols) + 1;
+                if (rowNum < currentRow)
+                {
+
+                    rowNum = (counter / numOfCols) + 1;
+                    Console.WriteLine($"");
+                }
+
+                Console.Write($"   {field}   ");
+
+                counter++;
+            }
+            Console.WriteLine($"");
+            Console.WriteLine($"");
+            Console.WriteLine($"-----------------------------------------------------------------");
         }
     }
 }

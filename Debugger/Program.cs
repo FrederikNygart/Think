@@ -1,13 +1,17 @@
 ﻿using Pensum;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Think;
+using Think.Util;
+using static Pensum.ImageReader;
 
 namespace Debugger
 {
     class Program
     {
+        public static NeuralNetwork nn = new NeuralNetwork(784, 64, 3);
         public static List<TestMaterial> materials
         {
             get
@@ -25,18 +29,94 @@ namespace Debugger
 
         static void Main(string[] args)
         {
-            var nn = new NeuralNetwork(2, 2, 2);
-            var input = new List<double> { 1, 0 };
-            var targets =  new List<double> { 1, 0 };
-
-            PrintMatrix(nn.Train(input, targets));
-
-            //foreach (var put in output)
-            //{
-            //    Console.WriteLine(put);
-            //}
-
+            TestDoodleClassifier();
             Console.ReadKey();
+        }
+
+        public static void TestDoodleClassifier()
+        {
+            Stopwatch stopwatch = Stopwatch.StartNew(); //creates and start the instance of Stopwatch
+            var data = new List<double>
+                            {
+                                DoodleType.apple,
+                                DoodleType.bird,
+                                DoodleType.compass
+                            }.Select(GetDoodleData);
+
+            Console.WriteLine($"Data prepared finished after: {stopwatch.ElapsedMilliseconds}ms");
+            var error = TestRunPredict(data, stopwatch);
+            Console.WriteLine($"Error predicted {error} after: {stopwatch.ElapsedMilliseconds}ms");
+
+            do
+            {
+                TestRunEpoch(data, stopwatch);
+                error = TestRunPredict(data, stopwatch);
+                Console.WriteLine($"Error predicted {error} after: {stopwatch.ElapsedMilliseconds}ms");
+            }
+            while (error > 0.10);
+
+        }
+
+        public static double TestRunPredict(IEnumerable<Dictionary<DATA_SET_TYPE, List<Doodle>>> data, Stopwatch stopwatch)
+        {
+            var testData = data.Select(dataSet => dataSet[DATA_SET_TYPE.test])
+                                .Aggregate((acc, item) => acc.Concat(item).ToList());
+            var errorRates = new List<double>();
+
+            testData.Shuffle();
+            for (var i = 0; i < testData.Count; i++)
+            {
+                var doodle = testData[i];
+                var targets = new List<double>();
+                for (int t = 0; t < 3; t++)
+                {
+                    targets.Add(t == doodle.Labels[0] - 1 ? 1 : 0);
+                }
+                var result = nn.FeedForward(doodle.Pixels);
+                var total = result.Aggregate(0.0, (acc, res) => acc + res);
+                var percentiles = result.Select(res => res / total).ToList();
+                var errorRate = targets[(int)doodle.Labels[0] - 1] - percentiles[(int)doodle.Labels[0] - 1];
+                errorRates.Add(errorRate);
+            }
+            return errorRates.Aggregate(0.0, (acc, errors) => acc + errors) / errorRates.Count;
+
+        }
+
+        public static void TestRunEpoch(IEnumerable<Dictionary<DATA_SET_TYPE, List<Doodle>>> data, Stopwatch stopwatch)
+        {
+
+            var trainingData = data.Select(doodleSet => doodleSet[DATA_SET_TYPE.training])
+                                    .Aggregate((acc, item) => acc.Concat(item).ToList());
+            trainingData.Shuffle();
+
+            for (var i = 0; i < trainingData.Count; i++)
+            {
+                var doodle = trainingData[i];
+                var inputs = doodle.Pixels.Select(pixel => pixel / 255.0).ToList();
+                var targets = new List<double>();
+                for (int t = 0; t < 3; t++)
+                {
+                    targets.Add(t == doodle.Labels[0] - 1 ? 1 : 0);
+                }
+                nn.Train(inputs, targets);
+            }
+            Console.WriteLine($"Trained for one epoch finishe after: {stopwatch.ElapsedMilliseconds}ms");
+        }
+
+        public static void TestNeuralNetwork()
+        {
+            var trainingData = new TestMaterial().TestData;
+            var nn = new NeuralNetwork(2, 4, 1);
+            for (var i = 0; i < 50000; i++)
+            {
+                var num = RandomGenerator.Integer(trainingData.Count);
+                var data = trainingData[num];
+                nn.Train(data["inputs"], data["targets"]);
+            }
+            Console.WriteLine(nn.FeedForward(new List<double> { 1, 0 })[0]);
+            Console.WriteLine(nn.FeedForward(new List<double> { 0, 1 })[0]);
+            Console.WriteLine(nn.FeedForward(new List<double> { 1, 1 })[0]);
+            Console.WriteLine(nn.FeedForward(new List<double> { 0, 0 })[0]);
         }
 
 
@@ -49,7 +129,7 @@ namespace Debugger
 
             PrintMatrix(a.Data);
 
-            Matrix.Map(a.Data , x => x * 2);
+            Matrix.Map(a.Data, x => x * 2);
 
             PrintMatrix(a.Data);
         }

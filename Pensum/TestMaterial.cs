@@ -10,6 +10,29 @@ namespace Pensum
     {
         public int Label { get; set; }
         public double[] Values = new double[2];
+        public List<Dictionary<string, List<double>>> TestData = new List<Dictionary<string, List<double>>>
+        {
+            new Dictionary<string, List<double>>
+            {
+                {"inputs", new List<double>{0,1} },
+                {"targets", new List<double>{1} }
+            },
+            new Dictionary<string, List<double>>
+            {
+                {"inputs", new List<double>{1,0} },
+                {"targets", new List<double>{1} }
+            },
+            new Dictionary<string, List<double>>
+            {
+                {"inputs", new List<double>{0,0} },
+                {"targets", new List<double>{0} }
+            },
+            new Dictionary<string, List<double>>
+            {
+                {"inputs", new List<double>{1,1} },
+                {"targets", new List<double>{0} }
+            },
+        };
 
         public TestMaterial()
         {
